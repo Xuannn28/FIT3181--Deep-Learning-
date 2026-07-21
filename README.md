@@ -40,8 +40,7 @@ Assignment 1 is divided into three parts, each focusing on a distinct phase of m
 * **Techniques Used:**
   * High-dimensional data transformations incorporating color jitter distributions, random axis-flips, and channel pixel normalizations.
   * Structural residual mapping pipelines passing cross-strided dimensionality matches.
-  * Multi-target objective loss formulations optimizing fractional continuous label matrices across both MixUp and CutMix training schedules.
-
+    
 ## Assignment 2: Recurrent Architectures & Sequential Modeling
 
 * **Notebook:** `FIT3181_DeepLearning_Assignment2_Official[Main].ipynb`
@@ -80,3 +79,18 @@ Assignment 1 is divided into three parts, each focusing on a distinct phase of m
   * **Multi-Kernel 1D Convolutions:** Simultaneous processing of sequence channels using three distinct 1D convolutional filter sizes (kernel sizes $k \in \{3, 5, 7\}$) to capture unigram, bigram, and trigram context features.
   * **Multi-Feature Concatenation & Dense Output:** Channel-wise concatenation of pooled representations across all three convolution streams into a 2D tensor, routed through a fully connected layer for multi-class prediction.
   * **End-to-End Training:** Model optimization using the custom `BaseTrainer` framework with `Adam` optimizer and Cross-Entropy loss.
+
+#### Part 3: Deep Multi-Layer Recurrent Architectures & Attention
+* **Notebook:** `FIT3181_DeepLearning_Assignment2_Official[RNNs].ipynb`
+* **Architectural Overview:** Modular design, comparative evaluation, and fine-tuning of multi-layer recurrent models across various cell types (`simple_rnn`, `lstm`, `gru`), sequence feature extraction pooling strategies (`mean`, `max`, `last_state`), pretrained embedding initialization modes, and an additive attention mechanism.
+* **Key Components:**
+  * **Modular `BaseRNN` Framework:** Dynamically constructs multi-layer recurrent networks by stacking cells (`nn.RNN`, `nn.LSTM`, `nn.GRU`) via `nn.ModuleList`. Supports three distinct sequence pooling strategies (`last_state`, `mean`, `max`) to extract fixed-size feature vectors for classification.
+  * **Pretrained Embedding Strategy (`RNN`):** Extends `BaseRNN` with flexible embedding initialization using Gensim's `glove-wiki-gigaword-100`. Compares three training modes:
+    * `scratch`: Randomly initialized embeddings trained from scratch.
+    * `init-only`: Pretrained GloVe weights frozen during training (`freeze=True`).
+    * `init-fine-tune`: Pretrained GloVe weights fine-tuned end-to-end (`freeze=False`).
+  * **Additive Attention Mechanism (`MyAttention` & `AttentionRNN`):** Custom implementation of a Bahdanau-style attention layer placed on top of the last hidden layer. Computes alignment scores $s_t = V \tanh(U h_t)$, normalizes them via Softmax into attention weights $a_t$, and outputs a weighted sequence context vector $c = \sum_{t=1}^T a_t h_t$.
+  * **Attention-Augmented Classification:** Concatenates the attention context vector with the aggregated sequence representation ($[c ; \text{rep}]$) before passing through the final linear classification head.
+* **Techniques Used:**
+  * Comparative grid-style training across cell types and pooling strategies using `BaseTrainer`.
+  * Pretrained vector loading and disk caching (`embeddings/E.npy`) with out-of-vocabulary handling.
