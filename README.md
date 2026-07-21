@@ -41,7 +41,7 @@ Assignment 1 is divided into three parts, each focusing on a distinct phase of m
   * High-dimensional data transformations incorporating color jitter distributions, random axis-flips, and channel pixel normalizations.
   * Structural residual mapping pipelines passing cross-strided dimensionality matches.
     
-## Assignment 2: Recurrent Architectures & Sequential Modeling
+## Assignment 2: RNN, Sequential Modelling & Transformer 
 
 * **Notebook:** `FIT3181_DeepLearning_Assignment2_Official[Main].ipynb`
 * **Overview:** Hands-on implementation of sequential neural network architectures, covering low-level Recurrent Neural Network (RNN) dynamics, pre-trained word embeddings for classical text classification, and 1D Convolutional Neural Networks (TextCNN) for sequence feature extraction.
@@ -94,3 +94,17 @@ Assignment 1 is divided into three parts, each focusing on a distinct phase of m
 * **Techniques Used:**
   * Comparative grid-style training across cell types and pooling strategies using `BaseTrainer`.
   * Pretrained vector loading and disk caching (`embeddings/E.npy`) with out-of-vocabulary handling.
+
+#### Part 4: Transformer-Based Models & Prefix Prompt-Tuning
+* **Notebook:** `FIT3181_DeepLearning_Assignment2_Official[Transformers].ipynb`
+* **Architectural Overview:** Full implementation of a custom Encoder-only Transformer classifier built from scratch, alongside a Parameter-Efficient Fine-Tuning (PEFT) framework implementing **Prefix Prompt-Tuning** on top of pre-trained BERT (`bert-base-uncased`).
+* **Key Components:**
+  * **Custom Transformer Classifier (`TransformerClassifier`):** Bare-metal implementation of stacked Transformer Encoder layers featuring multi-head self-attention (`MultiHeadAttention`), sinusoidal positional encoding (`PositionalEncoding`), and position-wise feed-forward networks (`PositionWiseFeedForward`). Aggregates hidden sequence representations via mean-pooling across timesteps before projecting to target class logits.
+  * **HuggingFace Data Processing Pipeline:** Conversion of raw text data into structured PyTorch `Dataset` objects via `AutoTokenizer`, configured with sequence truncation and padding (`max_length=36`). Includes custom dataset splitting routines (`train_valid_test_split`) into train, validation, and test loaders.
+  * **Prefix Prompt-Tuning Module (`PrefixTuningForClassification`):** Freezes all underlying parameters of `bert-base-uncased` while introducing a set of continuous, learnable prefix embeddings of shape `[prefix_length, hidden_size]`. Concatenates learnable prefix vectors onto input token embeddings along the sequence dimension.
+  * **Dynamic Mask Extension & Pooling:** Extends the sequence attention mask to allow full self-attention over prefix tokens and performs temporal mean-pooling across the combined hidden state sequence to drive a linear classification head.
+    
+* **Techniques Used:**
+  * Manual implementation of scaled dot-product multi-head attention and layer normalization.
+  * Selective gradient freezing (`param.requires_grad = False`) for pre-trained Transformer weights.
+  * Custom training harness (`FineTunedBaseTrainer`) configured with AdamW/Adam optimizers tailored specifically for prompt-tuning convergence over extended training schedules (100 epochs).
