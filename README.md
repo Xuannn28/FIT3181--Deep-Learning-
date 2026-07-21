@@ -34,11 +34,49 @@ Assignment 1 is divided into three parts, each focusing on a distinct phase of m
 * **Architectural Overview:** Structural engineering, evaluation, and empirical comparison of custom deep convolutional frameworks designed for multi-class animal categorization utilizing an optimized, 20-class subset image repository.
 * **Key Components:**
   * **Dynamic Modular CNN Engine (`YourCNN` & `YourBlock`):** Assembly of a customizable, block-based convolutional architecture parametrized to dynamically toggle features such as channel map dimension lists, dynamic dropout rates, custom batch normalization scaling hooks, and $1 \times 1$ downsampled structural residual skip connections.
-  * **Global Average Pooling (GAP) Topology:** Integration of bare-metal global spatial reductions (`AdaptiveAvgPool2d((1, 1))`) preceding final linear classification projecting directly to target logit spaces to reduce parametric density and safeguard against dense overfitting points.
-  * **Combinatorial Hyperparameter Sweeps:** Implementation of localized tuning frameworks evaluating block combinations against step-decay learning rates to map accuracy boundaries over testing targets.
+  * **Global Average Pooling (GAP) Topology:** Integration of bare-metal global spatial reductions (`AdaptiveAvgPool2d((1, 1))`) preceding final linear classification projecting directly to target logit spaces to reduce parametric density.
   * **MixUp Data Augmentation:** Implementation of stochastic convex pixel-blending transformations drawing parameter ratios from continuous $\text{Beta}(\alpha, \alpha)$ distributions to blend paired image vectors and linearize categorical cross-entropy calculations.
   * **CutMix Data Augmentation:** Development of spatial-patch mask replacement routines combining discrete binary box generation (`rand_bbox`) with targeted batch permutations to mix area proportions and enforce holistic texture representations.
 * **Techniques Used:**
   * High-dimensional data transformations incorporating color jitter distributions, random axis-flips, and channel pixel normalizations.
   * Structural residual mapping pipelines passing cross-strided dimensionality matches.
   * Multi-target objective loss formulations optimizing fractional continuous label matrices across both MixUp and CutMix training schedules.
+
+## Assignment 2: Recurrent Architectures & Sequential Modeling
+
+* **Notebook:** `FIT3181_DeepLearning_Assignment2_Official[Main].ipynb`
+* **Overview:** Hands-on implementation of sequential neural network architectures, covering low-level Recurrent Neural Network (RNN) dynamics, pre-trained word embeddings for classical text classification, and 1D Convolutional Neural Networks (TextCNN) for sequence feature extraction.
+
+---
+
+### Section 1: Fundamentals in RNNs
+* **Architectural Overview:** Bare-metal implementation of a multi-timestep, vanilla Recurrent Neural Network (RNN) cell built completely from scratch using low-level PyTorch tensor operations.
+* **Key Components:**
+  * **Manual Parameter Initialization:** Explicit declaration of weight matrices ($U, W, V$) and bias vectors ($b, c$) as learnable parameters (`torch.nn.Parameter`).
+  * **Recurrent Forward Loop:** Step-by-step state transition calculation across $T$ timesteps using the vanilla RNN equation:
+    
+    $$h_t = \tanh(X_t U + h_{t-1} W + b)$$
+    
+  * **Sequence Aggregation & Classification:** Stacking individual timestep hidden states into a unified sequence tensor $(B, L, H)$, extracting the final hidden state representation ($h_{T-1}$), and computing output classification logits.
+  * **Manual Backpropagation & SGD:** Execution of `loss.backward()` to compute gradients across all recurrent parameter matrices followed by explicit Stochastic Gradient Descent (SGD) weight updates using `torch.no_grad()`.
+
+---
+
+### Section 2: Deep Learning for Sequential Data
+
+#### Part 1: Using Word2Vec & GloVe for Text Classification
+* **Technique:** Feature extraction from unstructured text using pre-trained word vector representations combined with decaying importance weighting mechanisms.
+* **Key Components:**
+  * **Pre-trained Embeddings:** Integration of the `glove-wiki-gigaword-100` model via `gensim` to map tokens to 100-dimensional dense vectors (handling out-of-vocabulary words via zero-vector fallback).
+  * **Weighted Sentence Embeddings:** Generation of sentence-level representations using exponential position decay ($0.9^i$) normalized via Softmax to weight word vectors:
+    
+    $$\text{Vector}_{\text{sentence}} = \sum_{i=1}^{T} w_i \cdot v_i$$
+    
+  * **Pipeline Scaling & Modeling:** Feature normalization using `MinMaxScaler(feature_range=(-1, 1))` followed by multi-class classification using `LogisticRegression`, achieving high validation accuracy on question type classification.
+
+#### Part 2: TextCNN for Sequence Modeling & Neural Embedding
+* **Architectural Overview:** Implementation of the classic **TextCNN** architecture (*Kim, 2014*) using PyTorch layers for dynamic n-gram feature extraction.
+* **Key Components:**
+  * **Multi-Kernel 1D Convolutions:** Simultaneous processing of sequence channels using three distinct 1D convolutional filter sizes (kernel sizes $k \in \{3, 5, 7\}$) to capture unigram, bigram, and trigram context features.
+  * **Multi-Feature Concatenation & Dense Output:** Channel-wise concatenation of pooled representations across all three convolution streams into a 2D tensor, routed through a fully connected layer for multi-class prediction.
+  * **End-to-End Training:** Model optimization using the custom `BaseTrainer` framework with `Adam` optimizer and Cross-Entropy loss.
